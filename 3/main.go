@@ -28,12 +28,12 @@ func main() {
 
 	//vals = vals[0:100]
 
-	fmt.Println(vals)
+	//fmt.Println(vals)
 
 	countBits := make([]int, ReportLength)
 
 	for _, val := range vals {
-		fmt.Printf("%012b\n", val)
+		//fmt.Printf("%012b\n", val)
 		//fmt.Printf("%d\n", val)
 		for i := 0; i < ReportLength; i++ {
 			//fmt.Println("Conto:", val, PowTwo(i), val&PowTwo(i))
@@ -81,9 +81,11 @@ func DetermineGammaEpsilon(vals []uint16, countBits []int) {
 
 func DetermineGases(vals []uint16, countBits []int, gas bool) {
 	threshold := len(vals) / 2
+	fmt.Println(vals[0])
 
 	for i, count := range countBits {
 
+		fmt.Println(i)
 		firstVal := vals[0]
 		over := true
 
@@ -94,7 +96,7 @@ func DetermineGases(vals []uint16, countBits []int, gas bool) {
 			}
 		}
 
-		fmt.Println(vals)
+		//fmt.Println("Valori:", vals)
 
 		if over {
 			fmt.Println("AAAAAAAAAAA:", firstVal, gas)
@@ -110,9 +112,12 @@ func DetermineGases(vals []uint16, countBits []int, gas bool) {
 		}
 
 		for _, val := range vals {
-			if (GetBit(val, ReportLength-i+1) == 1) && flag {
+			fmt.Printf("Valore: %012b\n", val)
+			if (GetBit(val, ReportLength-i-1) == 1) && flag {
+				fmt.Println("Keep")
 				newVals = append(newVals, val)
-			} else if (GetBit(val, ReportLength-i+1) == 0) && !flag {
+			} else if (GetBit(val, ReportLength-i-1) == 0) && !flag {
+				fmt.Println("Keep2")
 				newVals = append(newVals, val)
 			}
 		}
