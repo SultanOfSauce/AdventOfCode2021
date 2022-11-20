@@ -16,7 +16,7 @@ func main() {
 
 	windowedValues := make([]int, len(vals)-WindowSize)
 
-	counter := 0
+	counter := 1
 
 	for i := range windowedValues {
 		sum := 0
@@ -30,10 +30,6 @@ func main() {
 		if windowedValues[i]-windowedValues[i-1] > 0 {
 			counter++
 		}
-		/*
-			isDecreased := vals[i] - vals[i-1] > 0
-			decreases[i] = vals[i] - vals[i-1] > 0
-		*/
 	}
 
 	fmt.Println(counter)
