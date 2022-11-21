@@ -1,144 +1,105 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
 	"strconv"
-	"strings"
 )
 
-const ReportLength = 12
+const bits = 12
+
+type node struct {
+	left  *node
+	right *node
+	value int
+}
+
+//https://www.reddit.com/r/adventofcode/comments/r7r0ff/2021_day_3_solutions/hrhfv4s/
 
 func main() {
-	strs := GatherValues("input.txt")
-
-	vals := make([]uint16, len(strs))
-
-	for i, str := range strs {
-
-		temp, err := strconv.ParseInt(str, 2, 16)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		vals[i] = uint16(temp)
-	}
-
-	//vals = vals[0:100]
-
-	//fmt.Println(vals)
-
-	countBits := make([]int, ReportLength)
-
-	for _, val := range vals {
-		//fmt.Printf("%012b\n", val)
-		//fmt.Printf("%d\n", val)
-		for i := 0; i < ReportLength; i++ {
-			//fmt.Println("Conto:", val, PowTwo(i), val&PowTwo(i))
-			//fmt.Println(ReportLength - i + 1)
-			countBits[ReportLength-i-1] += GetBit(val, i)
-		}
-	}
-
-	fmt.Println(countBits, len(vals))
-
-	//DetermineGammaEpsilon(vals, countBits)
-	DetermineGases(vals, countBits, true)
-	DetermineGases(vals, countBits, false)
-
-}
-
-func GatherValues(filename string) (strs []string) {
-	bytes, err := os.ReadFile(filename)
-	content := string(bytes)
-
+	file, err := os.Open("input.txt")
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
+	defer file.Close()
 
-	content = strings.TrimSpace(content)
-	strs = strings.Split(string(content), "\n")
-
-	return
-}
-
-func DetermineGammaEpsilon(vals []uint16, countBits []int) {
-
-	var noOne, noTwo uint16
-
-	for i, count := range countBits {
-		if count >= len(vals)/2 {
-			noOne += PowTwo(12 - i)
+	scanner := bufio.NewScanner(file)
+	lines := 0
+	root := &node{}
+	for scanner.Scan() {
+		lines++
+		l := scanner.Text()
+		n, err := strconv.ParseInt(l, 2, 32)
+		if err != nil {
+			log.Fatalln(err.Error())
 		}
-	}
-
-	noTwo = (^noOne) & 0b0000111111111111
-
-	fmt.Printf("%012b,   %012b\n%d   %d", noOne, noTwo, noOne, noTwo)
-}
-
-func DetermineGases(vals []uint16, countBits []int, gas bool) {
-	threshold := len(vals) / 2
-	fmt.Println(vals[0])
-
-	for i, count := range countBits {
-
-		fmt.Println(i)
-		firstVal := vals[0]
-		over := true
-
-		for _, val := range vals {
-			if val != firstVal {
-				over = false
-				break
+		no := root
+		for i := 0; i < bits; i++ {
+			mask := int64(1 << (bits - 1 - i))
+			if n&mask > 0 {
+				if no.left == nil {
+					no.left = &node{}
+				}
+				no.left.value += 1
+				no = no.left
+			} else {
+				if no.right == nil {
+					no.right = &node{}
+				}
+				no.right.value += 1
+				no = no.right
 			}
 		}
-
-		//fmt.Println("Valori:", vals)
-
-		if over {
-			fmt.Println("AAAAAAAAAAA:", firstVal, gas)
-			return
+		no.value = int(n)
+	}
+	no := root
+	for {
+		// left == 1, right==0
+		if no.left == nil && no.right == nil {
+			break
 		}
-
-		newVals := make([]uint16, 0)
-		var flag bool
-		if gas {
-			flag = count >= threshold
+		if no.left != nil && no.right == nil {
+			no = no.left
+			continue
+		}
+		if no.right != nil && no.left == nil {
+			no = no.right
+			continue
+		}
+		fmt.Printf("left: %v right: %v\n", no.left.value, no.right.value)
+		if no.left.value >= no.right.value {
+			no = no.left
 		} else {
-			flag = count < threshold
+			no = no.right
+		}
+	}
+	oxygen := no.value
+
+	no = root
+	for {
+		// left == 1, right==0
+		if no.left == nil && no.right == nil {
+			break
+		}
+		if no.left != nil && no.right == nil {
+			no = no.left
+			continue
+		}
+		if no.right != nil && no.left == nil {
+			no = no.right
+			continue
 		}
 
-		for _, val := range vals {
-			fmt.Printf("Valore: %012b\n", val)
-			if (GetBit(val, ReportLength-i-1) == 1) && flag {
-				fmt.Println("Keep")
-				newVals = append(newVals, val)
-			} else if (GetBit(val, ReportLength-i-1) == 0) && !flag {
-				fmt.Println("Keep2")
-				newVals = append(newVals, val)
-			}
+		fmt.Printf("left: %v right: %v\n", no.left.value, no.right.value)
+		if no.left.value < no.right.value {
+			no = no.left
+		} else {
+			no = no.right
 		}
-		fmt.Println(newVals)
-
-		vals = newVals
 	}
-}
+	co2 := no.value
 
-func GetBit(number uint16, bit int) int {
-	if (number>>bit)&1 == 1 {
-		return 1
-	} else {
-		return 0
-	}
-}
-
-func PowTwo(exponent int) uint16 {
-	var result uint16 = 1
-	for i := 1; i < exponent; i++ {
-		result *= 2
-	}
-	return result
+	fmt.Printf("answer: %v %v %v\n", oxygen, co2, oxygen*co2)
 }
